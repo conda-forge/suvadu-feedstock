@@ -13,38 +13,39 @@ build:
   number: 0
   script:
     env:
-      CARGO_PROFILE_RELEASE_STRIP: symbols
       CARGO_PROFILE_RELEASE_LTO: fat
+      CARGO_PROFILE_RELEASE_STRIP: symbols
     content:
       - if: unix
         then:
-          - cargo auditable install --locked --no-track --bins --root ${{ PREFIX }} --path .
+          - cargo auditable install --path=. --root="$PREFIX" --no-track --locked --bins
           # generate manpage and shell completions
-          - mkdir -p $PREFIX/share/man/man1 $PREFIX/share/bash-completion/completions $PREFIX/share/fish/vendor_completions.d $PREFIX/share/zsh/site-functions
-          - $PREFIX/bin/suv man > $PREFIX/share/man/man1/suv.1
-          - $PREFIX/bin/suv completions bash > $PREFIX/share/bash-completion/completions/suv
-          - $PREFIX/bin/suv completions fish > $PREFIX/share/fish/vendor_completions.d/suv.fish
-          - $PREFIX/bin/suv completions zsh > $PREFIX/share/zsh/site-functions/_suv
-        else:
-          - cargo auditable install --locked --no-track --bins --root %LIBRARY_PREFIX% --path .
+          - mkdir -p "$PREFIX"/share/man/man1 "$PREFIX"/share/bash-completion/completions "$PREFIX"/share/fish/vendor_completions.d "$PREFIX"/share/zsh/site-functions
+          - '"$PREFIX"/bin/suv man              > "$PREFIX"/share/man/man1/suv.1'
+          - '"$PREFIX"/bin/suv completions bash > "$PREFIX"/share/bash-completion/completions/suv'
+          - '"$PREFIX"/bin/suv completions fish > "$PREFIX"/share/fish/vendor_completions.d/suv.fish'
+          - '"$PREFIX"/bin/suv completions zsh  > "$PREFIX"/share/zsh/site-functions/_suv'
+      - if: win
+        then:
+          - cargo auditable install --path=. --root="%LIBRARY_PREFIX%" --no-track --locked --bins
           # generate manpage and shell completions
-          - mkdir %LIBRARY_PREFIX%\share\man\man1
-          - mkdir %LIBRARY_PREFIX%\share\bash-completion\completions
-          - mkdir %LIBRARY_PREFIX%\share\fish\vendor_completions.d
-          - mkdir %LIBRARY_PREFIX%\share\zsh\site-functions
-          - '%LIBRARY_BIN%\suv.exe man > %LIBRARY_PREFIX%\share\man\man1\suv.1'
-          - '%LIBRARY_BIN%\suv.exe completions bash > %LIBRARY_PREFIX%\share\bash-completion\completions\suv'
-          - '%LIBRARY_BIN%\suv.exe completions fish > %LIBRARY_PREFIX%\share\fish\vendor_completions.d\suv.fish'
-          - '%LIBRARY_BIN%\suv.exe completions zsh > %LIBRARY_PREFIX%\share\zsh\site-functions\_suv'
-      - cargo-bundle-licenses --format yaml --output ./THIRDPARTY.yml
+          - mkdir "%LIBRARY_PREFIX%"\share\man\man1
+          - mkdir "%LIBRARY_PREFIX%"\share\bash-completion\completions
+          - mkdir "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d
+          - mkdir "%LIBRARY_PREFIX%"\share\zsh\site-functions
+          - '"%LIBRARY_BIN%"\suv.exe man              > "%LIBRARY_PREFIX%"\share\man\man1\suv.1'
+          - '"%LIBRARY_BIN%"\suv.exe completions bash > "%LIBRARY_PREFIX%"\share\bash-completion\completions\suv'
+          - '"%LIBRARY_BIN%"\suv.exe completions fish > "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d\suv.fish'
+          - '"%LIBRARY_BIN%"\suv.exe completions zsh  > "%LIBRARY_PREFIX%"\share\zsh\site-functions\_suv'
+      - cargo-bundle-licenses --format=yaml --output=./THIRDPARTY.yml
 
 requirements:
   build:
     - ${{ stdlib('c') }}
     - ${{ compiler('c') }}
     - ${{ compiler('rust') }}
-    - cargo-bundle-licenses
     - cargo-auditable
+    - cargo-bundle-licenses
 
 tests:
   - script:
@@ -69,7 +70,6 @@ tests:
       strict: true
 
 about:
-  homepage: https://suvadu.sh
   summary: Total recall for your terminal. A database-backed shell history with fuzzy search.
   description: |
     Suvadu replaces your shell history with a SQLite-backed store. Every command gets
@@ -81,6 +81,8 @@ about:
   license_file:
     - LICENSE
     - THIRDPARTY.yml
+  homepage: https://suvadu.sh
+  documentation: https://suvadu.sh/cli
   repository: https://github.com/AppachiTech/suvadu
 
 extra:
