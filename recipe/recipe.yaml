@@ -42,6 +42,9 @@ build:
               - '"%LIBRARY_BIN%"\suv.exe completions fish > "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d\suv.fish'
               - '"%LIBRARY_BIN%"\suv.exe completions zsh  > "%LIBRARY_PREFIX%"\share\zsh\site-functions\_suv'
       - cargo-bundle-licenses --format=yaml --output=./THIRDPARTY.yml
+  # starting with v0.4.2, Suvadu introduced Unix-specific terminal redirection logic using `std::os::unix::*` and POSIX system calls from the `libc` crate
+  # without a Windows fallback or even conditional compilation guards, so only Unix is supported anymore
+  skip: not unix
 
 requirements:
   build:
