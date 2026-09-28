@@ -15,33 +15,19 @@ build:
     env:
       CARGO_PROFILE_RELEASE_LTO: fat
       CARGO_PROFILE_RELEASE_STRIP: symbols
+    interpreter: nu
     content:
-      - if: unix
+      - let prefix = $env.LIBRARY_PREFIX? | default $env.PREFIX
+      # build main app and generate license data
+      - cargo auditable install --path=. --root=($prefix) --no-track --locked --bins
+      - cargo-bundle-licenses --format=yaml --output=THIRDPARTY.yml
+      # generate shell completions and manpage
+      - if: build_platform == host_platform
         then:
-          - cargo auditable install --path=. --root="$PREFIX" --no-track --locked --bins
-          # generate manpage and shell completions
-          - if: build_platform == host_platform
-            then:
-              - mkdir -p "$PREFIX"/share/man/man1 "$PREFIX"/share/bash-completion/completions "$PREFIX"/share/fish/vendor_completions.d "$PREFIX"/share/zsh/site-functions
-              - '"$PREFIX"/bin/suv man              > "$PREFIX"/share/man/man1/suv.1'
-              - '"$PREFIX"/bin/suv completions bash > "$PREFIX"/share/bash-completion/completions/suv'
-              - '"$PREFIX"/bin/suv completions fish > "$PREFIX"/share/fish/vendor_completions.d/suv.fish'
-              - '"$PREFIX"/bin/suv completions zsh  > "$PREFIX"/share/zsh/site-functions/_suv'
-      - if: win
-        then:
-          - cargo auditable install --path=. --root="%LIBRARY_PREFIX%" --no-track --locked --bins
-          # generate manpage and shell completions
-          - if: build_platform == host_platform
-            then:
-              - mkdir "%LIBRARY_PREFIX%"\share\man\man1
-              - mkdir "%LIBRARY_PREFIX%"\share\bash-completion\completions
-              - mkdir "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d
-              - mkdir "%LIBRARY_PREFIX%"\share\zsh\site-functions
-              - '"%LIBRARY_BIN%"\suv.exe man              > "%LIBRARY_PREFIX%"\share\man\man1\suv.1'
-              - '"%LIBRARY_BIN%"\suv.exe completions bash > "%LIBRARY_PREFIX%"\share\bash-completion\completions\suv'
-              - '"%LIBRARY_BIN%"\suv.exe completions fish > "%LIBRARY_PREFIX%"\share\fish\vendor_completions.d\suv.fish'
-              - '"%LIBRARY_BIN%"\suv.exe completions zsh  > "%LIBRARY_PREFIX%"\share\zsh\site-functions\_suv'
-      - cargo-bundle-licenses --format=yaml --output=./THIRDPARTY.yml
+          - ^suv completions bash | save --force ($prefix)/share/bash-completion/completions/suv
+          - ^suv completions fish | save --force ($prefix)/share/fish/vendor_completions.d/suv.fish
+          - ^suv completions zsh  | save --force ($prefix)/share/zsh/site-functions/_suv
+          - ^suv man              | save --force ($prefix)/share/man/man1/suv.1
   # starting with v0.4.2, Suvadu introduced Unix-specific terminal redirection logic using `std::os::unix::*` and POSIX system calls from the `libc` crate
   # without a Windows fallback or even conditional compilation guards, so only Unix is supported anymore
   skip: not unix
@@ -53,6 +39,7 @@ requirements:
     - ${{ compiler('rust') }}
     - cargo-auditable
     - cargo-bundle-licenses
+    - nushell
 
 tests:
   - script:
