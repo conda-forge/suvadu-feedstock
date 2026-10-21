@@ -48,6 +48,7 @@ tests:
   - package_contents:
       bin:
         - suv
+        - suvadu
       files:
         - if: unix and build_platform == host_platform
           then:
